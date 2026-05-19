@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Deepfake Truth - Demo</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
 </head>
 <body>
 <h1>Deepfake Truth: Demo</h1>
@@ -18,58 +19,12 @@
         <button class="btn" onclick="startGame()">Començar Partida</button>
     </div>
 
-    <div id="screen-mj1" class="screen">
-        <h3>MJ1: Investigació (Clica les pistes!)</h3>
-        <div id="area-recerca" style="width:100%; height:100%; position:relative;"></div>
-    </div>
-
     <div id="screen-mj2" class="screen">
         <h3>MJ2: Persecució - Esquiva els obstacles!</h3>
         <p>Fes servir les fletxes ESQUERRA / DRETA per canviar de carril</p>
-        <div id="runner-lane-container">
-            <div class="lane" id="lane-0"></div>
-            <div class="lane" id="lane-1"></div>
-            <div class="lane" id="lane-2"></div>
-            <div id="player-runner"></div>
-        </div>
-    </div>
-
-    <div id="screen-mj3" class="screen">
-        <h3>MJ3: Deducció i Organització</h3>
-        <p>Compara les pistes per generar proves irrefutables.</p>
-        <div id="deduccio-container">
-            <div id="pistes-pendents">
-                <h4>Pistes de l'investigador</h4>
-                <div id="llista-pistes-mj3"></div>
-            </div>
-            <div id="taula-treball">
-                <h4>Taula de la reportera</h4>
-                <p>Selecciona dues pistes per comparar-les</p>
-                <div id="slots-comparacio">
-                    <div class="slot" id="slot-1"></div>
-                    <div class="slot" id="slot-2"></div>
-                </div>
-                <button class="btn" onclick="compararPistes()">Comparar Pistes</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="screen-mj4" class="screen">
-        <h3>MJ4: El Debat</h3>
-        <p id="argument-ia">"La IA diu: El Mencho mai va caure, és un deepfake!"</p>
-        <div id="opcions-debat"></div>
-    </div>
-
-    <div id="screen-mj5" class="screen">
-        <h3>MJ5: Combat Final</h3>
-        <div id="boss-hp-bar" style="width: 200px; height: 20px; background: grey;">
-            <div id="boss-hp-fill" style="width: 100%; height: 100%; background: red;"></div>
-        </div>
-        <p>Prem 'A' per atacar la IA!</p>
+        <div id="phaser-game-container"></div>
     </div>
 </div>
-<div id="inventory">Pistes recollides: <span id="pistes-list">Cap</span></div>
-
 <script src="game.js"></script>
 </body>
 </html>

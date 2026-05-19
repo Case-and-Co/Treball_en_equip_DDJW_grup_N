@@ -10,60 +10,137 @@ function showScreen(id) {
     document.getElementById(id).classList.add('active');
 }
 
-let currentLane = 1; // 0: Esquerra, 1: Centre, 2: Dreta
-let runnerActive = false;
-
-function startMJ2() {
-    showScreen('screen-mj2');
-    runnerActive = true;
-
-    window.addEventListener('keydown', (e) => {
-        if (!runnerActive) return;
-        if (e.key === 'ArrowLeft' && currentLane > 0) currentLane--;
-        if (e.key === 'ArrowRight' && currentLane < 2) currentLane++;
-
-        document.getElementById('player-runner').style.left = (currentLane * 100 + 30) + "px";
-    });
-
-    let obstacleInterval = setInterval(() => {
-        if (!runnerActive) {
-            clearInterval(obstacleInterval);
-            return;
-        }
-        createObstacle();
-    }, 1500);
-
-    setTimeout(() => {
-        runnerActive = false;
-        alert("Has sobreviscut a la persecució!");
-        startMJ3();
-    }, 10000);
+function updateHUD() {
+    let vidaElement = document.getElementById('status-vida');
+    if (vidaElement) vidaElement.innerText = `Vida: ${gameState.vida}`;
 }
 
-function createObstacle() {
-    const container = document.getElementById('runner-lane-container');
-    const obs = document.createElement('div');
-    const lane = Math.floor(Math.random() * 3);
+let game;
 
-    obs.className = 'obstacle';
-    obs.style.left = (lane * 100 + 30) + "px";
-    container.appendChild(obs);
+function startGame() {
+    gameState.vida = 100;
+    updateHUD();
 
-    let pos = 0;
-    let anim = setInterval(() => {
-        pos += 5;
-        obs.style.top = pos + "px";
+    showScreen('screen-mj2');
 
-        if (pos > 320 && pos < 380 && lane === currentLane) {
-            gameState.vida -= 10;
-            document.getElementById('status-vida').innerText = `Vida: ${gameState.vida}`;
-            obs.style.backgroundColor = "red";
-            if (gameState.vida <= 0) location.reload();
+    if (game) {
+        game.destroy(true);
+    }
+
+    const config = {
+        type: Phaser.AUTO,
+        scale: {
+            mode: Phaser.Scale.FIT,
+            autoCenter: Phaser.Scale.CENTER_BOTH,
+            width: 800,
+            height: 600,
+            parent: 'phaser-game-container'
+        },
+        backgroundColor: '#2b3e50',
+        physics: {
+            default: 'arcade',
+            arcade: { debug: false }
+        },
+        scene: [ SceneMJ2 ]
+    };
+
+    game = new Phaser.Game(config);
+}
+class SceneMJ2 extends Phaser.Scene {
+    constructor() {
+        super({ key: 'SceneMJ2' });
+    }
+
+    create() {
+        this.runnerActive = true;
+        this.currentLane = 1;
+
+        const centerX = 400;
+        const laneSpacing = 150;
+        this.lanesX = [centerX - laneSpacing, centerX, centerX + laneSpacing];
+
+        this.add.rectangle(60, 250, 90, 500, 0x444444);
+        this.add.rectangle(160, 250, 90, 500, 0x555555);
+        this.add.rectangle(260, 250, 90, 500, 0x444444);
+
+        this.player = this.add.rectangle(this.lanesX[this.currentLane], 450, 40, 40, 0x0088ff);
+        this.physics.add.existing(this.player);
+        this.player.body.setImmovable(true);
+
+        this.obstaclesGroup = this.physics.add.group();
+
+        this.input.keyboard.on('keydown-LEFT', () => {
+            if (!this.runnerActive) return;
+            if (this.currentLane > 0) {
+                this.currentLane--;
+                this.player.x = this.lanesX[this.currentLane];
+            }
+        });
+
+        this.input.keyboard.on('keydown-RIGHT', () => {
+            if (!this.runnerActive) return;
+            if (this.currentLane < 2) {
+                this.currentLane++;
+                this.player.x = this.lanesX[this.currentLane];
+            }
+        });
+
+        this.time.addEvent({
+            delay: 1200,
+            callback: this.createObstacle,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.time.delayedCall(10000, () => {
+            if (this.runnerActive) {
+                this.runnerActive = false;
+                this.physics.pause();
+                alert("Has sobreviscut a la persecució!");
+            }
+        }, [], this);
+
+        this.physics.add.overlap(this.player, this.obstaclesGroup, this.hitObstacle, null, this);
+    }
+
+    createObstacle() {
+        if (!this.runnerActive) return;
+        let lane = Phaser.Math.Between(0, 2);
+
+        let obs = this.add.rectangle(this.lanesX[lane], -20, 60, 60, 0xffcc00);
+        this.physics.add.existing(obs);
+
+        obs.body.setVelocityY(400);
+        obs.hasCollided = false;
+
+        this.obstaclesGroup.add(obs);
+    }
+
+    hitObstacle(player, obstacle) {
+        if (obstacle.hasCollided || !this.runnerActive) return;
+        obstacle.hasCollided = true;
+        obstacle.fillColor = 0xff0000;
+
+        gameState.vida -= 10;
+        updateHUD();
+
+        if (gameState.vida <= 0) {
+            this.runnerActive = false;
+            this.physics.pause();
+
+            this.time.delayedCall(1000, () => {
+                gameState.vida = 100;
+                updateHUD();
+                this.scene.restart();
+            });
         }
+    }
 
-        if (pos > 450) {
-            clearInterval(anim);
-            obs.remove();
-        }
-    }, 20);
+    update() {
+        this.obstaclesGroup.getChildren().forEach((obs) => {
+            if (obs.y > 650) {
+                obs.destroy();
+            }
+        });
+    }
 }
