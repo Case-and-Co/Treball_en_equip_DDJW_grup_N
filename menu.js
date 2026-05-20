@@ -26,7 +26,9 @@ class MainMenu extends Phaser.Scene {
 				
         this.crearBoto(400, 220, 'Començar Partida', () => {
             console.log("Iniciant la partida...");
-            // this.scene.start('RunnerGame'); 
+            gameState.vida = 100;
+            updateHUD();
+            this.scene.start('SceneMJ2'); 
         });
 
         this.crearBoto(400, 290, 'Crèdits i Controls', () => {
@@ -146,7 +148,11 @@ const config = {
     width: 800,
     height: 500,
     parent: 'game-container',
-    scene: [MainMenu, CreditsScene]
+	physics: {
+        default: 'arcade',
+        arcade: { debug: false }
+    },
+    scene: [MainMenu, CreditsScene, SceneMJ2]
 };
 
 const game = new Phaser.Game(config);

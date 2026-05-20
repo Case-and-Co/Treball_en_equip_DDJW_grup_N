@@ -14,7 +14,7 @@ function updateHUD() {
     let vidaElement = document.getElementById('status-vida');
     if (vidaElement) vidaElement.innerText = `Vida: ${gameState.vida}`;
 }
-
+/*
 let game;
 
 function startGame() {
@@ -46,6 +46,7 @@ function startGame() {
 
     game = new Phaser.Game(config);
 }
+*/
 class SceneMJ2 extends Phaser.Scene {
     constructor() {
         super({ key: 'SceneMJ2' });
@@ -59,9 +60,9 @@ class SceneMJ2 extends Phaser.Scene {
         const laneSpacing = 150;
         this.lanesX = [centerX - laneSpacing, centerX, centerX + laneSpacing];
 
-        this.add.rectangle(60, 250, 90, 500, 0x444444);
-        this.add.rectangle(160, 250, 90, 500, 0x555555);
-        this.add.rectangle(260, 250, 90, 500, 0x444444);
+        this.add.rectangle(this.lanesX[0], 300, 140, 600, 0x444444);
+		this.add.rectangle(this.lanesX[1], 300, 140, 600, 0x555555);
+		this.add.rectangle(this.lanesX[2], 300, 140, 600, 0x444444);
 
         this.player = this.add.rectangle(this.lanesX[this.currentLane], 450, 40, 40, 0x0088ff);
         this.physics.add.existing(this.player);
