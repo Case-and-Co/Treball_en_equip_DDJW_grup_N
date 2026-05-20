@@ -30,7 +30,7 @@ class MainMenu extends Phaser.Scene {
         });
 
         this.crearBoto(400, 290, 'Crèdits i Controls', () => {
-            console.log("Obrint crèdits...");
+			this.scene.start('CreditsScene');
             // escena credits i controls
         });
 
@@ -84,12 +84,69 @@ class MainMenu extends Phaser.Scene {
 		}
 }
 
+
+class CreditsScene extends Phaser.Scene {
+	constructor() {
+		super({ key: 'CreditsScene' });
+	}
+	
+	create() {
+		let fons = this.add.image(400, 250, 'fonsMenu');
+		fons.setDisplaySize(800, 500);
+		
+		this.add.text(400, 80, 'Crèdits i Controls', {
+			fontSize: '40px',
+			fontFamily: 'Segoe UI, sans-serif',
+			fill: '#ffffff',
+			fontStyle: 'bold'
+		}).setOrigin(0.5);
+		
+		this.add.text(400, 180, 'CONTROLS DEL JOC:\n\n Fletxa ESQUERRA: Anar al carril esquerre\n Fletxa DRETA: Anar al carril dret\n Objectiu: Esquiva els obstacles i sobreviu!', {
+            fontSize: '20px',
+            fontFamily: 'Segoe UI, sans-serif',
+            fill: '#ffffff',
+            align: 'center',
+            lineSpacing: 8
+        }).setOrigin(0.5);
+		
+		this.add.text(400, 300, 'CRÈDITS:\n\nDesenvolupat per: Gerard Casellas Bosch i Arià Casellas Bosch', {
+            fontSize: '18px',
+            fontFamily: 'Segoe UI, sans-serif',
+            fill: '#cccccc',
+            align: 'center'
+        }).setOrigin(0.5);
+		
+		const botoTornar = this.add.text(400, 410, 'Tornar al Menú', {
+            fontSize: '20px',
+            fontFamily: 'Segoe UI, sans-serif',
+            fill: '#ffffff',
+            backgroundColor: '#e74c3c',
+            padding: { x: 20, y: 10 }
+        })
+		.setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+		
+		botoTornar.on('pointerover', () => {
+            botoTornar.setStyle({ backgroundColor: '#c0392b' });
+            botoTornar.setScale(1.05);
+        });
+        botoTornar.on('pointerout', () => {
+            botoTornar.setStyle({ backgroundColor: '#e74c3c' });
+            botoTornar.setScale(1);
+        });
+		
+		botoTornar.on('pointerdown', () => {
+            this.scene.start('MainMenu');
+        });
+	}
+}
+
 const config = {
     type: Phaser.AUTO,
     width: 800,
     height: 500,
     parent: 'game-container',
-    scene: [MainMenu]
+    scene: [MainMenu, CreditsScene]
 };
 
 const game = new Phaser.Game(config);
