@@ -111,15 +111,41 @@ class SceneMJ2 extends Phaser.Scene {
         }, [], this);
 
         this.physics.add.overlap(this.player, this.obstaclesGroup, this.hitObstacle, null, this);
+		
+		this.boss = this.add.rectangle(this.lanesX[1], 80, 100, 100, 0xcc0000);
+        this.physics.add.existing(this.boss);
+		
+		this.time.addEvent({
+            delay: 800,
+            callback: this.moureBoss,
+            callbackScope: this,
+            loop: true
+        });
     }
-
-    createObstacle() {
+	
+	moureBoss() {
         if (!this.runnerActive) return;
+        let carrilAleatori = Phaser.Math.Between(0, 2);
+        this.tweens.add({
+            targets: this.boss,
+            x: this.lanesX[carrilAleatori],
+            duration: 300,
+            ease: 'Power1'
+        });
+    }
+	
+    createObstacle() {
+       /* if (!this.runnerActive) return;
         let lane = Phaser.Math.Between(0, 2);
 
         let obs = this.add.rectangle(this.lanesX[lane], -20, 60, 60, 0xffcc00);
         this.physics.add.existing(obs);
 		this.obstaclesGroup.add(obs);
+        obs.body.setVelocityY(400);
+        obs.hasCollided = false;*/
+		if (!this.runnerActive) return;
+        let obs = this.add.rectangle(this.boss.x, this.boss.y + 50, 60, 60, 0xffcc00);
+        this.obstaclesGroup.add(obs);
         obs.body.setVelocityY(400);
         obs.hasCollided = false;
     }
