@@ -4,27 +4,13 @@
     <meta charset="UTF-8">
     <title>Deepfake Truth - Demo</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
 <body>
-<h1>Deepfake Truth: Demo</h1>
-<div id="game-container">
-    <div class="hud">
-        <div id="status-vida">Vida: 100</div>
-        <div id="status-temps">Temps: --</div>
-    </div>
+    <div id="game-container"></div>
 
-    <div id="screen-start" class="screen active">
-        <h2>Pràctica 2: Deepfake Truth</h2>
-        <button class="btn" onclick="startGame()">Començar Partida</button>
-    </div>
-
-    <div id="screen-mj2" class="screen">
-        <h3>MJ2: Persecució - Esquiva els obstacles!</h3>
-        <p>Fes servir les fletxes ESQUERRA / DRETA per canviar de carril</p>
-        <div id="phaser-game-container"></div>
-    </div>
-</div>
-<script src="game.js"></script>
+    <script src="menu.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
