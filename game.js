@@ -53,6 +53,8 @@ class SceneMJ2 extends Phaser.Scene {
     }
 
     create() {
+		this.physics.resume(); 
+
         this.runnerActive = true;
         this.currentLane = 1;
 
@@ -110,11 +112,9 @@ class SceneMJ2 extends Phaser.Scene {
 
         let obs = this.add.rectangle(this.lanesX[lane], -20, 60, 60, 0xffcc00);
         this.physics.add.existing(obs);
-
+		this.obstaclesGroup.add(obs);
         obs.body.setVelocityY(400);
         obs.hasCollided = false;
-
-        this.obstaclesGroup.add(obs);
     }
 
     hitObstacle(player, obstacle) {
