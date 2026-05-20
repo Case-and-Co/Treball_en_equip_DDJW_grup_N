@@ -54,9 +54,11 @@ class SceneMJ2 extends Phaser.Scene {
 
     create() {
 		this.physics.resume(); 
-
         this.runnerActive = true;
         this.currentLane = 1;
+		
+		gameState.temps = 30;
+        gameState.bossVida = 100;
 
         const centerX = 400;
         const laneSpacing = 150;
@@ -65,12 +67,20 @@ class SceneMJ2 extends Phaser.Scene {
         this.add.rectangle(this.lanesX[0], 300, 140, 600, 0x444444);
 		this.add.rectangle(this.lanesX[1], 300, 140, 600, 0x555555);
 		this.add.rectangle(this.lanesX[2], 300, 140, 600, 0x444444);
+		
+		this.timeText = this.add.text(20, 20, 'Temps: ' + gameState.temps, { fontSize: '24px', fill: '#ffffff' });
+        this.bossHpText = this.add.text(600, 20, 'Boss HP: ' + gameState.bossVida, { fontSize: '24px', fill: '#ff0000', fontStyle: 'bold' });
 
         this.player = this.add.rectangle(this.lanesX[this.currentLane], 450, 40, 40, 0x0088ff);
         this.physics.add.existing(this.player);
         this.player.body.setImmovable(true);
+		
+		this.boss = this.add.rectangle(this.lanesX[1], 80, 100, 100, 0xcc0000);
+        this.physics.add.existing(this.boss);
+		this.boss.body.setImmovable(true);
 
         this.obstaclesGroup = this.physics.add.group();
+		this.bulletsGroup = this.physics.add.group();
 
         this.input.keyboard.on('keydown-LEFT', () => {
             if (!this.runnerActive) return;
@@ -88,6 +98,10 @@ class SceneMJ2 extends Phaser.Scene {
             }
         });
 		
+		this.input.keyboard.on('keydown-SPACE', () => {
+            this.shoot();
+        });
+		
 		this.input.keyboard.on('keydown-ESC', () => {
             if (this.runnerActive) {
                 this.scene.pause();
@@ -102,18 +116,12 @@ class SceneMJ2 extends Phaser.Scene {
             loop: true
         });
 
-        this.time.delayedCall(10000, () => {
-            if (this.runnerActive) {
-                this.runnerActive = false;
-                this.physics.pause();
-                alert("Has sobreviscut a la persecució!");
-            }
-        }, [], this);
-
-        this.physics.add.overlap(this.player, this.obstaclesGroup, this.hitObstacle, null, this);
-		
-		this.boss = this.add.rectangle(this.lanesX[1], 80, 100, 100, 0xcc0000);
-        this.physics.add.existing(this.boss);
+        this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
 		
 		this.time.addEvent({
             delay: 800,
@@ -121,6 +129,10 @@ class SceneMJ2 extends Phaser.Scene {
             callbackScope: this,
             loop: true
         });
+		
+		this.physics.add.overlap(this.player, this.obstaclesGroup, this.hitObstacle, null, this);
+		this.physics.add.overlap(this.bulletsGroup, this.obstaclesGroup, this.bulletHitObstacle, null, this);
+		this.physics.add.overlap(this.bulletsGroup, this.boss, this.bulletHitBoss, null, this);
     }
 	
 	moureBoss() {
@@ -149,25 +161,61 @@ class SceneMJ2 extends Phaser.Scene {
         obs.body.setVelocityY(400);
         obs.hasCollided = false;
     }
-
+	
+	shoot() {
+        if (!this.runnerActive) return;
+        let bullet = this.add.rectangle(this.player.x, this.player.y - 30, 8, 20, 0xffffff);
+        this.bulletsGroup.add(bullet);
+        bullet.body.setVelocityY(-600);
+    }
+	
+	bulletHitObstacle(bullet, obstacle) {
+        bullet.destroy();
+    }
+	
+	bulletHitBoss(boss, bullet) {
+        bullet.destroy();
+        if (!this.runnerActive) return;
+        gameState.bossVida -= 10;
+        this.bossHpText.setText('Boss HP: ' + gameState.bossVida);
+        boss.fillColor = 0xffffff;
+        this.time.delayedCall(100, () => { boss.fillColor = 0xcc0000; });
+        if (gameState.bossVida <= 0) {
+            this.runnerActive = false;
+            this.physics.pause();
+            alert("VICTÒRIA! Has derrotat la IA!");
+            this.scene.start('MainMenu');
+        }
+    }
+	
     hitObstacle(player, obstacle) {
         if (obstacle.hasCollided || !this.runnerActive) return;
         obstacle.hasCollided = true;
         obstacle.fillColor = 0xff0000;
 
-        gameState.vida -= 50;
-        updateHUD();
+        this.morir();
+    }
+	
+	updateTimer() {
+        if (!this.runnerActive) return;
+        gameState.temps--;
+        this.timeText.setText('Temps: ' + gameState.temps);
 
-        if (gameState.vida <= 0) {
-            this.runnerActive = false;
-            this.physics.pause();
-
-            this.time.delayedCall(1000, () => {
-                gameState.vida = 100;
-                updateHUD();
-                this.scene.restart();
-            });
+        if (gameState.temps <= 0) {
+            this.morir("La IA ha escapat!");
         }
+    }
+	
+	morir(motiu = "Has xocat amb un obstacle!") {
+        if (!this.runnerActive) return;
+        
+        this.runnerActive = false;
+        this.physics.pause();
+        alert("GAME OVER: " + motiu);
+
+        this.time.delayedCall(1000, () => {
+            this.scene.restart();
+        });
     }
 
     update() {
