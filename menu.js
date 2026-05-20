@@ -143,6 +143,57 @@ class CreditsScene extends Phaser.Scene {
 	}
 }
 
+class PauseMenu extends Phaser.Scene {
+    constructor() {
+        super({ key: 'PauseMenu' });
+    }
+
+    create() {
+        this.add.rectangle(400, 250, 800, 500, 0x000000, 0.7);
+
+        this.add.text(400, 150, 'PAUSA', {
+            fontSize: '48px',
+            fontFamily: 'Segoe UI, sans-serif',
+            fill: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        this.crearBoto(400, 250, 'Reprendre Partida', () => {
+            this.scene.resume('SceneMJ2');
+            this.scene.stop();
+        });
+
+        this.crearBoto(400, 320, 'Sortir al Menú', () => {
+            this.scene.stop('SceneMJ2');
+            this.scene.start('MainMenu');
+        });
+    }
+	
+    crearBoto(x, y, text, accioOnClick) {
+        const boto = this.add.text(x, y, text, {
+            fontSize: '24px',
+            fontFamily: 'Segoe UI, sans-serif',
+            fill: '#ffffff',
+            backgroundColor: '#e74c3c',
+            padding: { x: 20, y: 10 }
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+
+        boto.on('pointerover', () => {
+            boto.setStyle({ backgroundColor: '#c0392b' });
+            boto.setScale(1.05);
+        });
+        boto.on('pointerout', () => {
+            boto.setStyle({ backgroundColor: '#e74c3c' });
+            boto.setScale(1);
+        });
+
+        boto.on('pointerdown', accioOnClick);
+        return boto;
+    }
+}
+
 const config = {
     type: Phaser.AUTO,
     width: 800,
@@ -152,7 +203,7 @@ const config = {
         default: 'arcade',
         arcade: { debug: false }
     },
-    scene: [MainMenu, CreditsScene, SceneMJ2]
+    scene: [MainMenu, CreditsScene, SceneMJ2, PauseMenu]
 };
 
 const game = new Phaser.Game(config);

@@ -87,6 +87,13 @@ class SceneMJ2 extends Phaser.Scene {
                 this.player.x = this.lanesX[this.currentLane];
             }
         });
+		
+		this.input.keyboard.on('keydown-ESC', () => {
+            if (this.runnerActive) {
+                this.scene.pause();
+                this.scene.launch('PauseMenu');
+            }
+        });
 
         this.time.addEvent({
             delay: 1200,
@@ -122,7 +129,7 @@ class SceneMJ2 extends Phaser.Scene {
         obstacle.hasCollided = true;
         obstacle.fillColor = 0xff0000;
 
-        gameState.vida -= 10;
+        gameState.vida -= 50;
         updateHUD();
 
         if (gameState.vida <= 0) {
