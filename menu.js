@@ -103,7 +103,7 @@ class CreditsScene extends Phaser.Scene {
 			fontStyle: 'bold'
 		}).setOrigin(0.5);
 		
-		this.add.text(400, 180, 'CONTROLS DEL JOC:\n\n Fletxa ESQUERRA: Anar al carril esquerre\n Fletxa DRETA: Anar al carril dret\n Objectiu: Esquiva els obstacles i sobreviu!', {
+		this.add.text(400, 190, '\n CONTROLS DEL JOC:\n Fletxa ESQUERRA / DRETA: Canviar de carril\n Barra ESPAIADORA: Disparar bales\n Tecla ESC: Pausar la partida\n\nObjectiu: Elimina el Boss abans que s\exhaureixi el temps!', {
             fontSize: '20px',
             fontFamily: 'Segoe UI, sans-serif',
             fill: '#ffffff',
@@ -111,14 +111,14 @@ class CreditsScene extends Phaser.Scene {
             lineSpacing: 8
         }).setOrigin(0.5);
 		
-		this.add.text(400, 300, 'CRÈDITS:\n\nDesenvolupat per: Gerard Casellas Bosch i Arià Casellas Bosch', {
+		this.add.text(400, 340, 'CRÈDITS:\n\nDesenvolupat per: Gerard Casellas Bosch i Arià Casellas Bosch', {
             fontSize: '18px',
             fontFamily: 'Segoe UI, sans-serif',
             fill: '#cccccc',
             align: 'center'
         }).setOrigin(0.5);
 		
-		const botoTornar = this.add.text(400, 410, 'Tornar al Menú', {
+		const botoTornar = this.add.text(400, 420, 'Tornar al Menú', {
             fontSize: '20px',
             fontFamily: 'Segoe UI, sans-serif',
             fill: '#ffffff',
