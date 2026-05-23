@@ -12,8 +12,6 @@ class MainMenu extends Phaser.Scene {
 		
 		let fons = this.add.image(400, 250, 'fonsMenu');
 		fons.setDisplaySize(800, 500);
-		
-        //this.cameras.main.setBackgroundColor('#2c3e50');
 
         this.add.text(400, 150, 'Deepfake Truth', {
             fontSize: '48px',
@@ -26,7 +24,9 @@ class MainMenu extends Phaser.Scene {
 				
         this.crearBoto(400, 220, 'Començar Partida', () => {
             console.log("Iniciant la partida...");
-            // this.scene.start('RunnerGame'); 
+            gameState.vida = 100;
+            updateHUD();
+            this.scene.start('SceneMJ2'); 
         });
 
         this.crearBoto(400, 290, 'Crèdits i Controls', () => {
@@ -101,7 +101,7 @@ class CreditsScene extends Phaser.Scene {
 			fontStyle: 'bold'
 		}).setOrigin(0.5);
 		
-		this.add.text(400, 180, 'CONTROLS DEL JOC:\n\n Fletxa ESQUERRA: Anar al carril esquerre\n Fletxa DRETA: Anar al carril dret\n Objectiu: Esquiva els obstacles i sobreviu!', {
+		this.add.text(400, 190, '\n CONTROLS DEL JOC:\n Fletxa ESQUERRA / DRETA: Canviar de carril\n Barra ESPAIADORA: Disparar bales\n Tecla ESC: Pausar la partida\n\nObjectiu: Elimina el Boss abans que s\exhaureixi el temps!', {
             fontSize: '20px',
             fontFamily: 'Segoe UI, sans-serif',
             fill: '#ffffff',
@@ -109,14 +109,14 @@ class CreditsScene extends Phaser.Scene {
             lineSpacing: 8
         }).setOrigin(0.5);
 		
-		this.add.text(400, 300, 'CRÈDITS:\n\nDesenvolupat per: Gerard Casellas Bosch i Arià Casellas Bosch', {
+		this.add.text(400, 340, 'CRÈDITS:\n\nDesenvolupat per: Gerard Casellas Bosch i Arià Casellas Bosch', {
             fontSize: '18px',
             fontFamily: 'Segoe UI, sans-serif',
             fill: '#cccccc',
             align: 'center'
         }).setOrigin(0.5);
 		
-		const botoTornar = this.add.text(400, 410, 'Tornar al Menú', {
+		const botoTornar = this.add.text(400, 420, 'Tornar al Menú', {
             fontSize: '20px',
             fontFamily: 'Segoe UI, sans-serif',
             fill: '#ffffff',
@@ -141,12 +141,67 @@ class CreditsScene extends Phaser.Scene {
 	}
 }
 
+class PauseMenu extends Phaser.Scene {
+    constructor() {
+        super({ key: 'PauseMenu' });
+    }
+
+    create() {
+        this.add.rectangle(400, 250, 800, 500, 0x000000, 0.7);
+
+        this.add.text(400, 150, 'PAUSA', {
+            fontSize: '48px',
+            fontFamily: 'Segoe UI, sans-serif',
+            fill: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        this.crearBoto(400, 250, 'Reprendre Partida', () => {
+            this.scene.resume('SceneMJ2');
+            this.scene.stop();
+        });
+
+        this.crearBoto(400, 320, 'Sortir al Menú', () => {
+            this.scene.stop('SceneMJ2');
+            this.scene.start('MainMenu');
+        });
+    }
+	
+    crearBoto(x, y, text, accioOnClick) {
+        const boto = this.add.text(x, y, text, {
+            fontSize: '24px',
+            fontFamily: 'Segoe UI, sans-serif',
+            fill: '#ffffff',
+            backgroundColor: '#e74c3c',
+            padding: { x: 20, y: 10 }
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+
+        boto.on('pointerover', () => {
+            boto.setStyle({ backgroundColor: '#c0392b' });
+            boto.setScale(1.05);
+        });
+        boto.on('pointerout', () => {
+            boto.setStyle({ backgroundColor: '#e74c3c' });
+            boto.setScale(1);
+        });
+
+        boto.on('pointerdown', accioOnClick);
+        return boto;
+    }
+}
+
 const config = {
     type: Phaser.AUTO,
     width: 800,
     height: 500,
     parent: 'game-container',
-    scene: [MainMenu, CreditsScene]
+    physics: {
+        default: 'arcade',
+        arcade: { debug: false }
+    },
+    scene: [MainMenu, CreditsScene, SceneMJ2, PauseMenu, GameOverMenu, VictoryMenu]
 };
 
 const game = new Phaser.Game(config);

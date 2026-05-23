@@ -10,184 +10,360 @@ function showScreen(id) {
     document.getElementById(id).classList.add('active');
 }
 
-// --- MJ1: INVESTIGACIÓ ---
-function startGame() {
-    showScreen('screen-mj1');
-    gameState.temps = 15;
-    const area = document.getElementById('area-recerca');
+function updateHUD() {
+    let vidaElement = document.getElementById('status-vida');
+    if (vidaElement) vidaElement.innerText = `Vida: ${gameState.vida}`;
+}
 
-    // Crear pistes aleatòries (Repte Atòmic: Clicar) [cite: 327]
-    for(let i=0; i<3; i++) {
-        let p = document.createElement('div');
-        p.className = 'pista-obj';
-        p.style.left = Math.random() * 700 + 'px';
-        p.style.top = Math.random() * 300 + 'px';
-        p.onclick = () => collectPista(i);
-        area.appendChild(p);
+class SceneMJ2 extends Phaser.Scene {
+    constructor() {
+        super({ key: 'SceneMJ2' });
     }
 
-    let timer = setInterval(() => {
-        gameState.temps--;
-        document.getElementById('status-temps').innerText = `Temps: ${gameState.temps}`;
-        if (gameState.pistes.length === 3 || gameState.temps <= 0) {
-            clearInterval(timer);
-            startMJ2();
-        }
-    }, 1000);
-}
+    create() {
+		this.physics.resume(); 
+        this.runnerActive = true;
+        this.currentLane = 1;
+		
+		gameState.temps = 30;
+        gameState.bossVida = 100;
 
-function collectPista(id) {
-    gameState.pistes.push({ id: id, modificada: false, desc: `Prova real #${id+1}` });
-    updateInventory();
-    event.target.remove();
-}
+        const centerX = 400;
+        const laneSpacing = 150;
+        this.lanesX = [centerX - laneSpacing, centerX, centerX + laneSpacing];
 
-function updateInventory() {
-    const list = gameState.pistes.map(p => p.desc).join(', ');
-    document.getElementById('pistes-list').innerText = list || 'Cap';
-}
+        this.cameras.main.setBackgroundColor('#0b0f19');
 
-// Noves variables per al MJ2
-let currentLane = 1; // 0: Esquerra, 1: Centre, 2: Dreta
-let runnerActive = false;
+        this.add.rectangle(this.lanesX[0], 300, 145, 600, 0x111827);
+        this.add.rectangle(this.lanesX[1], 300, 145, 600, 0x1f2937);
+        this.add.rectangle(this.lanesX[2], 300, 145, 600, 0x111827);
 
-function startMJ2() {
-    showScreen('screen-mj2');
-    runnerActive = true;
-
-    // Control de moviment (Repte Atòmic: Córrer/Canviar carril)
-    window.addEventListener('keydown', (e) => {
-        if (!runnerActive) return;
-        if (e.key === 'ArrowLeft' && currentLane > 0) currentLane--;
-        if (e.key === 'ArrowRight' && currentLane < 2) currentLane++;
-
-        // Actualitzar posició visual (carrils de 100px)
-        document.getElementById('player-runner').style.left = (currentLane * 100 + 30) + "px";
-    });
-
-    // Generador d'obstacles (Bucle Primari MJ2 )
-    let obstacleInterval = setInterval(() => {
-        if (!runnerActive) {
-            clearInterval(obstacleInterval);
-            return;
-        }
-        createObstacle();
-    }, 1500);
-
-    // Temps de joc per al Runner
-    setTimeout(() => {
-        runnerActive = false;
-        alert("Has sobreviscut a la persecució!");
-        startMJ3(); // Passem al següent minijoc
-    }, 10000); // 10 segons de durada
-}
-
-function createObstacle() {
-    const container = document.getElementById('runner-lane-container');
-    const obs = document.createElement('div');
-    const lane = Math.floor(Math.random() * 3);
-
-    obs.className = 'obstacle';
-    obs.style.left = (lane * 100 + 30) + "px";
-    container.appendChild(obs);
-
-    let pos = 0;
-    let anim = setInterval(() => {
-        pos += 5;
-        obs.style.top = pos + "px";
-
-        // Detecció de col·lisió (Drenador: -Vida )
-        if (pos > 320 && pos < 380 && lane === currentLane) {
-            gameState.vida -= 10;
-            document.getElementById('status-vida').innerText = `Vida: ${gameState.vida}`;
-            obs.style.backgroundColor = "red"; // Feedback visual de col·lisió
-            if (gameState.vida <= 0) location.reload(); // Game Over [cite: 115]
+        this.linesGroup = this.add.group();
+        for (let i = 0; i < 5; i++) {
+            let line1 = this.add.rectangle(centerX - 75, i * 150, 4, 60, 0x00e5ff);
+            let line2 = this.add.rectangle(centerX + 75, i * 150, 4, 60, 0x00e5ff);
+            this.linesGroup.add(line1);
+            this.linesGroup.add(line2);
         }
 
-        if (pos > 450) {
-            clearInterval(anim);
-            obs.remove();
-        }
-    }, 20);
-}
+        let graphics = this.make.graphics({x: 0, y: 0, add: false});
+        graphics.fillStyle(0x00e5ff, 1);
+        graphics.fillCircle(4, 4, 4);
+        graphics.generateTexture('glow-particle', 8, 8);
 
+        this.trail = this.add.particles(0, 0, 'glow-particle', {
+            speed: { min: 50, max: 150 },
+            angle: { min: 80, max: 100 },
+            scale: { start: 1, end: 0 },
+            blendMode: 'ADD',
+            lifespan: 300,
+            frequency: 30
+        });
 
-let pistesSeleccionades = [];
-let provesGenerades = [];
+        this.timeText = this.add.text(20, 20, 'Temps: ' + gameState.temps, { fontSize: '24px', fill: '#00e5ff', fontFamily: 'monospace', fontStyle: 'bold' });
+        this.bossHpText = this.add.text(600, 20, 'Boss HP: ' + gameState.bossVida, { fontSize: '24px', fill: '#ff0055', fontFamily: 'monospace', fontStyle: 'bold' });
 
-function startMJ3() {
-    showScreen('screen-mj3');
-    const llista = document.getElementById('llista-pistes-mj3');
-    llista.innerHTML = "";
-    pistesSeleccionades = [];
+        this.player = this.add.rectangle(this.lanesX[this.currentLane], 450, 40, 40, 0x0088ff);
+        this.physics.add.existing(this.player);
+        this.player.body.setImmovable(true);
+        this.trail.startFollow(this.player, 0, 35);
 
-    // Mostrem les pistes que hem recollit al MJ1
-    gameState.pistes.forEach((pista, index) => {
-        let card = document.createElement('div');
-        card.className = 'pista-card';
-        card.innerText = pista.desc;
-        card.onclick = () => seleccionarPerComparar(pista, card);
-        llista.appendChild(card);
-    });
-}
+        this.boss = this.add.rectangle(this.lanesX[1], 80, 100, 100, 0xff0055);
+        this.physics.add.existing(this.boss);
+		this.boss.body.setImmovable(true);
 
-function seleccionarPerComparar(pista, element) {
-    if (pistesSeleccionades.length < 2 && !pistesSeleccionades.includes(pista)) {
-        pistesSeleccionades.push(pista);
-        element.classList.add('selected');
-        document.getElementById(`slot-${pistesSeleccionades.length}`).innerText = pista.desc;
-    }
-}
+        this.tweens.add({
+            targets: this.boss,
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 400,
+            yoyo: true,
+            repeat: -1
+        });
 
-function compararPistes() {
-    if (pistesSeleccionades.length === 2) {
-        // Bucle Secundari: Transformar pistes en proves
-        let novaProva = {
-            id: Date.now(),
-            desc: `PROVA IRREFUTABLE: ${pistesSeleccionades[0].id + 1} + ${pistesSeleccionades[1].id + 1}`
-        };
-        provesGenerades.push(novaProva);
-        alert("Has generat una prova sòlida per al debat!");
+        this.obstaclesGroup = this.physics.add.group();
+		this.bulletsGroup = this.physics.add.group();
 
-        startMJ4();
-    } else {
-        alert("Selecciona dues pistes per comparar-les.");
-    }
-}
-
-// --- MJ4: DEBAT ---
-function startMJ4() {
-    showScreen('screen-mj4');
-    const container = document.getElementById('opcions-debat');
-    container.innerHTML = "";
-
-    // Presentar proves de l'inventari (Bucle Primari MJ4)
-    provesGenerades.forEach(pista => {
-        let btn = document.createElement('button');
-        btn.className = "btn";
-        btn.style.margin = "5px";
-        btn.innerText = `Presentar: ${pista.desc}`;
-        btn.onclick = () => {
-            alert("Has convençut el públic! [cite: 32]");
-            startMJ5();
-        };
-        container.appendChild(btn);
-    });
-}
-
-// --- MJ5: BOSS FIGHT ---
-function startMJ5() {
-    showScreen('screen-mj5');
-    // Listener de tecles per atacar
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'a' || e.key === 'A') {
-            gameState.bossVida -= 5;
-            document.getElementById('boss-hp-fill').style.width = gameState.bossVida + "%";
-
-            if (gameState.bossVida <= 0) {
-                alert("VICTÒRIA! IA derrotada. [cite: 365]");
-                location.reload();
+        this.input.keyboard.on('keydown-LEFT', () => {
+            if (!this.runnerActive) return;
+            if (this.currentLane > 0) {
+                this.currentLane--;
+                this.tweens.add({
+                    targets: this.player,
+                    x: this.lanesX[this.currentLane],
+                    duration: 100,
+                    ease: 'Power2'
+                });
             }
+        });
+
+        this.input.keyboard.on('keydown-RIGHT', () => {
+            if (!this.runnerActive) return;
+            if (this.currentLane < 2) {
+                this.currentLane++;
+                this.tweens.add({
+                    targets: this.player,
+                    x: this.lanesX[this.currentLane],
+                    duration: 100,
+                    ease: 'Power2'
+                });
+            }
+        });
+		
+		this.input.keyboard.on('keydown-SPACE', () => {
+            this.shoot();
+        });
+		
+		this.input.keyboard.on('keydown-ESC', () => {
+            if (this.runnerActive) {
+                this.scene.pause();
+                this.scene.launch('PauseMenu');
+            }
+        });
+
+        this.time.addEvent({
+            delay: 1200,
+            callback: this.createObstacle,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+		
+		this.time.addEvent({
+            delay: 800,
+            callback: this.moureBoss,
+            callbackScope: this,
+            loop: true
+        });
+		
+		this.physics.add.overlap(this.player, this.obstaclesGroup, this.hitObstacle, null, this);
+		this.physics.add.overlap(this.bulletsGroup, this.obstaclesGroup, this.bulletHitObstacle, null, this);
+		this.physics.add.overlap(this.bulletsGroup, this.boss, this.bulletHitBoss, null, this);
+    }
+	
+	moureBoss() {
+        if (!this.runnerActive) return;
+        let carrilAleatori = Phaser.Math.Between(0, 2);
+        this.tweens.add({
+            targets: this.boss,
+            x: this.lanesX[carrilAleatori],
+            duration: 300,
+            ease: 'Power1'
+        });
+    }
+	
+    createObstacle() {
+		if (!this.runnerActive) return;
+
+        let obs = this.add.rectangle(this.boss.x, this.boss.y + 50, 45, 45, 0xff0055);
+        this.physics.add.existing(obs); // Assegurem les físiques primer
+        this.obstaclesGroup.add(obs);
+        obs.body.setVelocityY(400);
+        obs.hasCollided = false;
+
+        this.tweens.add({
+            targets: obs,
+            angle: 360,
+            duration: 800,
+            repeat: -1,
+            ease: 'Linear'
+        });
+    }
+	
+	shoot() {
+        if (!this.runnerActive) return;
+        let bullet = this.add.rectangle(this.player.x, this.player.y - 30, 6, 25, 0xffff00);
+        this.bulletsGroup.add(bullet);
+        bullet.body.setVelocityY(-600);
+    }
+	
+	bulletHitObstacle(bullet, obstacle) {
+        bullet.destroy();
+    }
+	
+	bulletHitBoss(boss, bullet) {
+        bullet.destroy();
+        if (!this.runnerActive) return;
+        gameState.bossVida -= 10;
+        this.bossHpText.setText('Boss HP: ' + gameState.bossVida);
+        boss.fillColor = 0xffffff;
+        this.cameras.main.shake(100, 0.005);
+        this.time.delayedCall(100, () => { boss.fillColor = 0xcc0000; });
+        if (gameState.bossVida <= 0) {
+            this.runnerActive = false;
+            this.physics.pause();
+
+            this.trail.stop();
+            this.cameras.main.flash(500, 255, 255, 255);
+
+            this.time.delayedCall(600, () => {
+                // alert("VICTÒRIA! Has derrotat la IA!");
+                this.scene.pause();
+                this.scene.launch('VictoryMenu');
+            });
         }
-    });
+    }
+	
+    hitObstacle(player, obstacle) {
+        if (obstacle.hasCollided || !this.runnerActive) return;
+        obstacle.hasCollided = true;
+
+        obstacle.fillColor = 0x444444;
+        this.cameras.main.shake(300, 0.02);
+        this.cameras.main.flash(200, 255, 0, 85);
+
+        this.morir();
+    }
+	
+	updateTimer() {
+        if (!this.runnerActive) return;
+        gameState.temps--;
+        this.timeText.setText('Temps: ' + gameState.temps);
+
+        if (gameState.temps <= 0) {
+            this.morir("La IA ha escapat!");
+        }
+    }
+	
+	morir(motiu = "Has xocat amb un obstacle!") {
+        if (!this.runnerActive) return;
+        
+        this.runnerActive = false;
+        this.physics.pause();
+        this.trail.stop();
+
+        this.time.delayedCall(1000, () => {
+            this.scene.pause();
+            this.scene.launch('GameOverMenu', { motiu: motiu });
+        });
+    }
+
+    update() {
+        if (this.runnerActive) {
+            this.linesGroup.getChildren().forEach(line => {
+                line.y += 8;
+                if (line.y > 650) {
+                    line.y = -50;
+                }
+            });
+        }
+
+        this.obstaclesGroup.getChildren().forEach((obs) => {
+            if (obs.y > 650) {
+                obs.destroy();
+            }
+        });
+
+        this.bulletsGroup.getChildren().forEach((bullet) => {
+            if (bullet.y < -50) {
+                bullet.destroy();
+            }
+        });
+    }
+}
+// ==========================================
+// MENÚ DE GAME OVER
+// ==========================================
+class GameOverMenu extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameOverMenu' });
+    }
+
+    // Aquesta funció recull les dades que li passem (el motiu de la mort)
+    init(data) {
+        this.motiu = data.motiu || "Has perdut!";
+    }
+
+    create() {
+        // Fons semitransparent fosc
+        this.add.rectangle(400, 250, 800, 500, 0x000000, 0.85);
+
+        this.add.text(400, 140, 'GAME OVER', {
+            fontSize: '56px',
+            fontFamily: 'monospace',
+            fill: '#ff0055',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        this.add.text(400, 220, this.motiu, {
+            fontSize: '24px',
+            fontFamily: 'Segoe UI, sans-serif',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+
+        this.crearBoto(400, 310, 'Tornar a Intentar', () => {
+            this.scene.stop('SceneMJ2'); // Aturem la partida actual completament
+            this.scene.start('SceneMJ2'); // En comencem una de nova
+        });
+
+        this.crearBoto(400, 380, 'Sortir al Menú', () => {
+            this.scene.stop('SceneMJ2');
+            this.scene.start('MainMenu');
+        });
+    }
+
+    crearBoto(x, y, text, accioOnClick) {
+        const boto = this.add.text(x, y, text, {
+            fontSize: '24px', fontFamily: 'Segoe UI, sans-serif', fill: '#ffffff', backgroundColor: '#e74c3c', padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+        boto.on('pointerover', () => { boto.setStyle({ backgroundColor: '#c0392b' }); boto.setScale(1.05); });
+        boto.on('pointerout', () => { boto.setStyle({ backgroundColor: '#e74c3c' }); boto.setScale(1); });
+        boto.on('pointerdown', accioOnClick);
+        return boto;
+    }
+}
+
+// ==========================================
+// MENÚ DE VICTÒRIA
+// ==========================================
+class VictoryMenu extends Phaser.Scene {
+    constructor() {
+        super({ key: 'VictoryMenu' });
+    }
+
+    create() {
+        // Fons semitransparent fosc
+        this.add.rectangle(400, 250, 800, 500, 0x000000, 0.85);
+
+        this.add.text(400, 140, 'VICTÒRIA!', {
+            fontSize: '56px',
+            fontFamily: 'monospace',
+            fill: '#00e5ff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        this.add.text(400, 220, 'Has derrotat la IA i has sobreviscut.', {
+            fontSize: '24px',
+            fontFamily: 'Segoe UI, sans-serif',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+
+        this.crearBoto(400, 310, 'Tornar a Jugar', () => {
+            this.scene.stop('SceneMJ2');
+            this.scene.start('SceneMJ2');
+        });
+
+        this.crearBoto(400, 380, 'Tornar al Menú', () => {
+            this.scene.stop('SceneMJ2');
+            this.scene.start('MainMenu');
+        });
+    }
+
+    crearBoto(x, y, text, accioOnClick) {
+        const boto = this.add.text(x, y, text, {
+            fontSize: '24px', fontFamily: 'Segoe UI, sans-serif', fill: '#ffffff', backgroundColor: '#e74c3c', padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+        boto.on('pointerover', () => { boto.setStyle({ backgroundColor: '#c0392b' }); boto.setScale(1.05); });
+        boto.on('pointerout', () => { boto.setStyle({ backgroundColor: '#e74c3c' }); boto.setScale(1); });
+        boto.on('pointerdown', accioOnClick);
+        return boto;
+    }
 }
