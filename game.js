@@ -14,39 +14,7 @@ function updateHUD() {
     let vidaElement = document.getElementById('status-vida');
     if (vidaElement) vidaElement.innerText = `Vida: ${gameState.vida}`;
 }
-/*
-let game;
 
-function startGame() {
-    gameState.vida = 100;
-    updateHUD();
-
-    showScreen('screen-mj2');
-
-    if (game) {
-        game.destroy(true);
-    }
-
-    const config = {
-        type: Phaser.AUTO,
-        scale: {
-            mode: Phaser.Scale.FIT,
-            autoCenter: Phaser.Scale.CENTER_BOTH,
-            width: 800,
-            height: 600,
-            parent: 'phaser-game-container'
-        },
-        backgroundColor: '#2b3e50',
-        physics: {
-            default: 'arcade',
-            arcade: { debug: false }
-        },
-        scene: [ SceneMJ2 ]
-    };
-
-    game = new Phaser.Game(config);
-}
-*/
 class SceneMJ2 extends Phaser.Scene {
     constructor() {
         super({ key: 'SceneMJ2' });
@@ -236,7 +204,8 @@ class SceneMJ2 extends Phaser.Scene {
 
             this.time.delayedCall(600, () => {
                 // alert("VICTÒRIA! Has derrotat la IA!");
-                this.scene.start('MainMenu');
+                this.scene.pause();
+                this.scene.launch('VictoryMenu');
             });
         }
     }
@@ -267,10 +236,11 @@ class SceneMJ2 extends Phaser.Scene {
         
         this.runnerActive = false;
         this.physics.pause();
-        //alert("GAME OVER: " + motiu);
+        this.trail.stop();
 
         this.time.delayedCall(1000, () => {
-            this.scene.restart();
+            this.scene.pause();
+            this.scene.launch('GameOverMenu', { motiu: motiu });
         });
     }
 
@@ -295,5 +265,105 @@ class SceneMJ2 extends Phaser.Scene {
                 bullet.destroy();
             }
         });
+    }
+}
+// ==========================================
+// MENÚ DE GAME OVER
+// ==========================================
+class GameOverMenu extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameOverMenu' });
+    }
+
+    // Aquesta funció recull les dades que li passem (el motiu de la mort)
+    init(data) {
+        this.motiu = data.motiu || "Has perdut!";
+    }
+
+    create() {
+        // Fons semitransparent fosc
+        this.add.rectangle(400, 250, 800, 500, 0x000000, 0.85);
+
+        this.add.text(400, 140, 'GAME OVER', {
+            fontSize: '56px',
+            fontFamily: 'monospace',
+            fill: '#ff0055',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        this.add.text(400, 220, this.motiu, {
+            fontSize: '24px',
+            fontFamily: 'Segoe UI, sans-serif',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+
+        this.crearBoto(400, 310, 'Tornar a Intentar', () => {
+            this.scene.stop('SceneMJ2'); // Aturem la partida actual completament
+            this.scene.start('SceneMJ2'); // En comencem una de nova
+        });
+
+        this.crearBoto(400, 380, 'Sortir al Menú', () => {
+            this.scene.stop('SceneMJ2');
+            this.scene.start('MainMenu');
+        });
+    }
+
+    crearBoto(x, y, text, accioOnClick) {
+        const boto = this.add.text(x, y, text, {
+            fontSize: '24px', fontFamily: 'Segoe UI, sans-serif', fill: '#ffffff', backgroundColor: '#e74c3c', padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+        boto.on('pointerover', () => { boto.setStyle({ backgroundColor: '#c0392b' }); boto.setScale(1.05); });
+        boto.on('pointerout', () => { boto.setStyle({ backgroundColor: '#e74c3c' }); boto.setScale(1); });
+        boto.on('pointerdown', accioOnClick);
+        return boto;
+    }
+}
+
+// ==========================================
+// MENÚ DE VICTÒRIA
+// ==========================================
+class VictoryMenu extends Phaser.Scene {
+    constructor() {
+        super({ key: 'VictoryMenu' });
+    }
+
+    create() {
+        // Fons semitransparent fosc
+        this.add.rectangle(400, 250, 800, 500, 0x000000, 0.85);
+
+        this.add.text(400, 140, 'VICTÒRIA!', {
+            fontSize: '56px',
+            fontFamily: 'monospace',
+            fill: '#00e5ff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        this.add.text(400, 220, 'Has derrotat la IA i has sobreviscut.', {
+            fontSize: '24px',
+            fontFamily: 'Segoe UI, sans-serif',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+
+        this.crearBoto(400, 310, 'Tornar a Jugar', () => {
+            this.scene.stop('SceneMJ2');
+            this.scene.start('SceneMJ2');
+        });
+
+        this.crearBoto(400, 380, 'Tornar al Menú', () => {
+            this.scene.stop('SceneMJ2');
+            this.scene.start('MainMenu');
+        });
+    }
+
+    crearBoto(x, y, text, accioOnClick) {
+        const boto = this.add.text(x, y, text, {
+            fontSize: '24px', fontFamily: 'Segoe UI, sans-serif', fill: '#ffffff', backgroundColor: '#e74c3c', padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+        boto.on('pointerover', () => { boto.setStyle({ backgroundColor: '#c0392b' }); boto.setScale(1.05); });
+        boto.on('pointerout', () => { boto.setStyle({ backgroundColor: '#e74c3c' }); boto.setScale(1); });
+        boto.on('pointerdown', accioOnClick);
+        return boto;
     }
 }

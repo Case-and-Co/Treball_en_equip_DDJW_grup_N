@@ -12,8 +12,6 @@ class MainMenu extends Phaser.Scene {
 		
 		let fons = this.add.image(400, 250, 'fonsMenu');
 		fons.setDisplaySize(800, 500);
-		
-        //this.cameras.main.setBackgroundColor('#2c3e50');
 
         this.add.text(400, 150, 'Deepfake Truth', {
             fontSize: '48px',
@@ -199,11 +197,11 @@ const config = {
     width: 800,
     height: 500,
     parent: 'game-container',
-	physics: {
+    physics: {
         default: 'arcade',
         arcade: { debug: false }
     },
-    scene: [MainMenu, CreditsScene, SceneMJ2, PauseMenu]
+    scene: [MainMenu, CreditsScene, SceneMJ2, PauseMenu, GameOverMenu, VictoryMenu]
 };
 
 const game = new Phaser.Game(config);
